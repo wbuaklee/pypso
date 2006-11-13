@@ -16,8 +16,8 @@
 #      choice and let several trials run while you get a fresh cup of coffee :-)
 #
 #  To use it, open a Python session and type:
-#  $ import pso
-#  $ pso.run()
+#  $ import pypso.base
+#  $ pypso.base.run()
 #  
 #  There are a lot of things to tweak with at the beginning of this file. 
 #
