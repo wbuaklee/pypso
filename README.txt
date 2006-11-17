@@ -15,11 +15,16 @@
 #  - Experiment setups. Average over many iterations and/or automatically change conditions of your 
 #      choice and let several trials run while you get a fresh cup of coffee :-)
 #
-#  To use it, open a Python session and type:
-#  $ import pypso.base
+#  To use it, navigate into directoryn where the pypso directory resides, 
+#  open a Python session and type:
+#  $ import pypsobase
 #  $ pypso.base.run()
-#  
-#  There are a lot of things to tweak with at the beginning of this file. 
+#  (you can also navigate into the pypso directory and leave the "pypso."-parts away in the 
+#  python-session) 
+#
+#  There are a lot of things to tweak with in the file conf.py.
+#
+#  If you have comments and/or help, feel free to drop me a line at nhoening [at] gmail [dot] com 
 #
 #  -------- GNU Licence -------
 #  This program is free software; you can redistribute it and/or modify
