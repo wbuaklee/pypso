@@ -1,5 +1,7 @@
-import conf
 import base
+
+log = {}     # contains logs for all trials (trialname is the key)
+iterLog = {} # just lists the logpoints
 
 def getLogPoints(runs,interval):
   res = []
@@ -7,39 +9,47 @@ def getLogPoints(runs,interval):
     res.append(runs)
     runs -= interval
   return res
-  
-log = dict() # contains logs for all trials (trialname is the key)
-iterLog = getLogPoints(conf.maxIterations,conf.logFrequency) # just lists the logpoints
 
-def logPoint(when,pBestAvg,gBest,meanFitness):
+def logPoint(when,pBestAvg,gBest,meanFitness,conf):
   ''' logging - just adding up values for iteration points
       writeLog() will average them
   '''	  
-  # compute avg nearness
-  avg_nearness = 0
+  global iterLog
+  if iterLog == {}: iterLog = getLogPoints(conf.maxIterations,conf.logFrequency) 
+  # compute avg closeness
+  avg_closeness = 0
   avg_geo_index = 0
-  for p in base.particles: 
-    avg_nearness += p.nearness
-    p.geoneighbors_index_sum /= base.getNumberOfNeighbors()
+  for p in base.particles:
+    avg_closeness += p.closeness
+    p.geoneighbors_index_sum /= float(base.getNumberOfNeighbors(conf))
     avg_geo_index += p.geoneighbors_index_sum
-  avg_nearness /= float(conf.numberOfParticles)
+  avg_closeness /= float(conf.numberOfParticles)
   avg_geo_index /= float(conf.numberOfParticles) 
-  if conf.logConsole: print 'iteration: ' + str(when).rjust(4) + '\t' + str(meanFitness)[:10].rjust(15) + '\t' + str(pBestAvg)[:10].rjust(15) + '\t' + str(gBest)[:10].rjust(15) + '\t' + str(avg_geo_index).rjust(15) + '\t' + str(avg_nearness).rjust(10) 
+  if conf.logConsole: 
+    logstr =  'iteration: ' + str(when).rjust(4) + '\t'
+    if conf.logMeanFitness: logstr += str(meanFitness)[:10].rjust(15) + '\t'
+    if conf.logPBest: logstr +=  str(pBestAvg)[:10].rjust(15) + '\t'
+    if conf.logGBest: logstr += str(gBest)[:10].rjust(15) + '\t'
+    if conf.logGeoRank: logstr += str(avg_geo_index).rjust(15) + '\t'
+    if conf.logCloseness: logstr += str(avg_closeness).rjust(10)
+    print logstr 
   if conf.logMeanFitness: log[conf.actTrialName]['meanFitnessLog'][str(when)] += meanFitness
   if conf.logPBest: log[conf.actTrialName]['pBestLog'][str(when)] += pBestAvg
   if conf.logGBest: log[conf.actTrialName]['gBestLog'][str(when)] += gBest
   if conf.logGeoRank: log[conf.actTrialName]['georankLog'][str(when)] += avg_geo_index
-  if conf.logNearness: log[conf.actTrialName]['nearnessLog'][str(when)] += avg_nearness
+  if conf.logCloseness: log[conf.actTrialName]['closenessLog'][str(when)] += avg_closeness
   
-def resetLogs():
+def resetLogs(conf):
+  global iterLog
+  if iterLog == {}: iterLog = getLogPoints(conf.maxIterations,conf.logFrequency) 
   for p in iterLog: # this is useful for averaging
     log[conf.actTrialName]['meanFitnessLog'][str(p)] = 0
     log[conf.actTrialName]['pBestLog'][str(p)] = 0
     log[conf.actTrialName]['gBestLog'][str(p)] = 0
     log[conf.actTrialName]['georankLog'][str(p)] = 0
-    log[conf.actTrialName]['nearnessLog'][str(p)] = 0
+    log[conf.actTrialName]['closenessLog'][str(p)] = 0
 
-def getNumberOfLogs(include):
+def getNumberOfLogs(include,conf):
   ''' returns number of logged Fitness values (1-3) 
       include can be 'geo', 'fitness' or 'all'
   '''
@@ -48,10 +58,10 @@ def getNumberOfLogs(include):
   if include in ('all','fitness') and conf.logPBest: res += 1
   if include in ('all','fitness') and conf.logGBest: res += 1
   if include in ('all','geo') and conf.logGeoRank: res += 1
-  if include in ('all','geo') and conf.logNearness: res += 1
+  if include in ('all','geo') and conf.logCloseness: res += 1
   return res
 
-def writeHeaders(include):
+def writeHeaders(include,conf):
   ''' write Headers 
       include can be 'geo', 'fitness' or 'all'
   '''
@@ -61,27 +71,27 @@ def writeHeaders(include):
     if include in ('all','fitness') and conf.logPBest: headers.append('avg. pbest ('+trial+')')
     if include in ('all','fitness') and conf.logGBest: headers.append('gbest so far ('+trial+')')
     if include in ('all','geo') and conf.logGeoRank: headers.append('avg. georank ('+trial+')')
-    if include in ('all','geo') and conf.logNearness: headers.append('avg. nearness ('+trial+')')
+    if include in ('all','geo') and conf.logCloseness: headers.append('avg. closeness ('+trial+')')
   return headers
 
 
-def getColumnSequence(start,data_type):
+def getColumnSequence(start,data_type,conf):
   s = []
   for trial in range(len(log.keys())):
     if data_type=='fitness':
-      for i in range(getNumberOfLogs('fitness')): s.append(start+i)
-      start += getNumberOfLogs('all')
+      for i in range(getNumberOfLogs('fitness',conf)): s.append(start+i)
+      start += getNumberOfLogs('all',conf)
     elif data_type=='geo':
-      for i in range(getNumberOfLogs('geo')): s.append(start+i)
-      start += getNumberOfLogs('all')
+      for i in range(getNumberOfLogs('geo',conf)): s.append(start+i)
+      start += getNumberOfLogs('all',conf)
   return s
 
-def writeGNURFile(data_type): 
+def writeGNURFile(data_type,conf): 
   ''' write a GNU R File
       data_type can be 'fitness' ot 'geo' (those are groups of data that 
       would fit well on the same scale, per topic and per scale) 
   '''
-  headers = writeHeaders(data_type)
+  headers = writeHeaders(data_type,conf)
   rFile = open('log'+conf.logSuffix+'_'+data_type+'.r','w')
   import datetime
   rFile.write('# ---------------------------------------------------------------------------\n')
@@ -106,7 +116,7 @@ def writeGNURFile(data_type):
       if (col=='pBestLog' and (data_type=='geo' or not conf.logPBest)): continue
       if (col=='gBestLog' and (data_type=='geo' or not conf.logGBest)): continue
       if (col=='georankLog' and (data_type=='fitness' or not conf.logGeoRank)): continue
-      if (col=='nearnessLog' and (data_type=='fitness' or not conf.logNearness)): continue
+      if (col=='closenessLog' and (data_type=='fitness' or not conf.logCloseness)): continue
       for row in log[trial][col].values():
         if not tmp: tmp = row
         if func(row,tmp) == row: 
@@ -120,23 +130,28 @@ def writeGNURFile(data_type):
   elif (bestCol[1]=='pBestLog' and conf.logMeanFitness) or (bestCol[1]=='gBestLog' and (not conf.logMeanFitness or not conf.logPBest)): index = 2
   
   # for geodata, it's simpler:
-  nfl = getNumberOfLogs('fitness')
+  nfl = getNumberOfLogs('fitness',conf)
   if bestCol[1]=='georankLog': index = nfl + 1
-  elif bestCol[1]=='nearnessLog': index = nfl + 2
+  elif bestCol[1]=='closenessLog': index = nfl + 2
   
   #index *= bestCol[0] # shift it to the trial with the best value
-  for i in range(bestCol[0]): index += getNumberOfLogs('all')
+  for i in range(bestCol[0]): index += getNumberOfLogs('all',conf)
   index += 1 # the first column are the iterations, so add one
   # Here I assume that it's cool to show the y-column for fitness data logarythmic! You might want to change that!
-  if data_type=='fitness': logarythmic = 'y'
-  else: logarythmic = ""
-  rFile.write('plot(d$Iteration,d[,'+str(index)+'],type="n",log="'+logarythmic+'", xlab="Iteration", ylab="Fitness")\n')
+  if data_type=='fitness': 
+    ylab = 'Fitness'
+    logarithmic = 'y'
+  else: 
+    ylab = 'georank / closeness'
+    logarithmic = ""
+
+  rFile.write('plot(d$Iteration,d[,'+str(index)+'],type="n",log="'+logarithmic+'", xlab="Iteration", ylab="'+ylab+'")\n')
 
   # generate colors
   colors = ['black','green','yellow','red','blue','pink','orange','grey']
   trial_colors = []
   for trial in log.keys():
-    for i in range(getNumberOfLogs(data_type)):
+    for i in range(getNumberOfLogs(data_type,conf)):
       trial_colors.append(colors[log.keys().index(trial)])
 
   # write the lines ...
@@ -145,17 +160,13 @@ def writeGNURFile(data_type):
   start = 2 # the data in R starts indexing by 1 since we have the Iteration column, which is the index, not data
   if data_type == 'geo': start += nfl
   used_colors = []
-  columns = getColumnSequence(start,data_type)
+  columns = getColumnSequence(start,data_type,conf)
   nmb = start
   for trial in headers:
     color = trial_colors[nmb-start]
     used_colors.append(color)
     plotLine(columns[nmb-start],nmb-start+1,color)
     nmb += 1
-	#column += 1
-	# step over columns in the data that we are not considering here
-	#if data_type=='fitness' and: column += getNumberOfLogs('geo')
-	#if data_type=='geo': column += getNumberOfLogs('fitness')
 
   # ... and the legend (its horizontal position is just an estimate)
   rFile.write('legend('+str(conf.maxIterations/3)+',max(d[,'+str(index)+'])-max(d[,'+str(index)+'])/10,lty=c'+str(tuple(range(1,nmb-start+1))).replace(",)",")")+',legend=c'+str(tuple(headers)).replace(",)",")")+', col=c'+str(tuple(used_colors)).replace(",)",")")+')\n')
@@ -164,7 +175,7 @@ def writeGNURFile(data_type):
   rFile.write('q()\n')
   rFile.close()
 
-def writeLog():
+def writeLog(conf):
   # filetype
   suffix = '.csv'
   logFile = open('log'+conf.logSuffix+suffix,'w')
@@ -172,15 +183,15 @@ def writeLog():
     # average out
     for trial in log.keys():
       if conf.logPBest: 
-        for when in iterLog: log[trial]['pBestLog'][str(when)] = float(log[trial]['pBestLog'][str(when)]) / conf.averageOver
+        for when in iterLog: log[trial]['pBestLog'][str(when)] = float(log[trial]['pBestLog'][str(when)]) / float(conf.averageOver)
       if conf.logGBest: 
-        for when in iterLog: log[trial]['gBestLog'][str(when)] = float(log[trial]['gBestLog'][str(when)]) / conf.averageOver
+        for when in iterLog: log[trial]['gBestLog'][str(when)] = float(log[trial]['gBestLog'][str(when)]) / float(conf.averageOver)
       if conf.logMeanFitness: 
-        for when in iterLog: log[trial]['meanFitnessLog'][str(when)] = float(log[trial]['meanFitnessLog'][str(when)]) / conf.averageOver
+        for when in iterLog: log[trial]['meanFitnessLog'][str(when)] = float(log[trial]['meanFitnessLog'][str(when)]) / float(conf.averageOver)
       if conf.logGeoRank: 
-        for when in iterLog: log[trial]['georankLog'][str(when)] = float(log[trial]['georankLog'][str(when)]) / conf.averageOver
-      if conf.logNearness: 
-        for when in iterLog: log[trial]['nearnessLog'][str(when)] = float(log[trial]['nearnessLog'][str(when)]) / conf.averageOver
+        for when in iterLog: log[trial]['georankLog'][str(when)] = float(log[trial]['georankLog'][str(when)]) / float(conf.averageOver)
+      if conf.logCloseness: 
+        for when in iterLog: log[trial]['closenessLog'][str(when)] = float(log[trial]['closenessLog'][str(when)]) / float(conf.averageOver)
     
     # rather explicit, but another logging style could be implemented with this helpers
     def writeCell(val, isLast): 
@@ -193,7 +204,7 @@ def writeLog():
     l = len(log.keys()) # number of trials
     numCols = 0
 
-    headers = writeHeaders('all')
+    headers = writeHeaders('all',conf)
 	  
     logFile.write(writeCell('Iteration',False))
     for h in headers:
@@ -208,18 +219,18 @@ def writeLog():
       logFile.write(writeNewLineStart() + writeCell(iteration,False))     
       for i in range(l):
         trial = log.keys()[i]
-        if conf.logMeanFitness: logFile.write(writeCell(log[trial]['meanFitnessLog'][str(iteration)], i==l-1 and not (conf.logPBest or conf.logGBest or conf.logGeoRank or conf.logNearness)))
-        if conf.logPBest: logFile.write(writeCell(log[trial]['pBestLog'][str(iteration)], i==l-1 and not (conf.logGBest or conf.logGeoRank or conf.logNearness)))
-        if conf.logGBest: logFile.write(writeCell(log[trial]['gBestLog'][str(iteration)], i==l-1 and not (conf.logGeoRank or conf.logNearness)))
-        if conf.logGeoRank: logFile.write(writeCell(log[trial]['georankLog'][str(iteration)], i==l-1 and not conf.logNearness))
-        if conf.logNearness: logFile.write(writeCell(log[trial]['nearnessLog'][str(iteration)], i==l-1))
+        if conf.logMeanFitness: logFile.write(writeCell(log[trial]['meanFitnessLog'][str(iteration)], i==l-1 and not (conf.logPBest or conf.logGBest or conf.logGeoRank or conf.logCloseness)))
+        if conf.logPBest: logFile.write(writeCell(log[trial]['pBestLog'][str(iteration)], i==l-1 and not (conf.logGBest or conf.logGeoRank or conf.logCloseness)))
+        if conf.logGBest: logFile.write(writeCell(log[trial]['gBestLog'][str(iteration)], i==l-1 and not (conf.logGeoRank or conf.logCloseness)))
+        if conf.logGeoRank: logFile.write(writeCell(log[trial]['georankLog'][str(iteration)], i==l-1 and not conf.logCloseness))
+        if conf.logCloseness: logFile.write(writeCell(log[trial]['closenessLog'][str(iteration)], i==l-1))
       logFile.write(writeNewLineEnd())
 
   logFile.close()
 
   # write GNU R File(s), if requested
   if conf.logRFile:
-    if conf.logMeanFitness or conf.logPBest or conf.logGBest: writeGNURFile('fitness')
-    if conf.logGeoRank or conf.logNearness: writeGNURFile('geo')
+    if conf.logMeanFitness or conf.logPBest or conf.logGBest: writeGNURFile('fitness',conf)
+    if conf.logGeoRank or conf.logCloseness: writeGNURFile('geo',conf)
 
 

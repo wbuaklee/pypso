@@ -1,8 +1,9 @@
-# ******************************************************************************
+################################################################################
 #  ----------- PyPSO -----------
 #  
 #  This script is an implementation of the Particle Swarm Optimization
 #  algorithm in Python.
+#  It can be used to perform basic experiments.
 #  It was written by Nicolas Hoening (http://www.nicolashoening.de)
 #  with some inspiration by pseudocode of adaptiveview.com:
 #  http://www.adaptiveview.com/articles/ipsop1.html 
@@ -15,9 +16,9 @@
 #  - Experiment setups. Average over many iterations and/or automatically change conditions of your 
 #      choice and let several trials run while you get a fresh cup of coffee :-)
 #
-#  To use it, navigate into directoryn where the pypso directory resides, 
+#  To use it, navigate into the directory where the pypso directory resides, 
 #  open a Python session and type:
-#  $ import pypsobase
+#  $ import pypso.base
 #  $ pypso.base.run()
 #  (you can also navigate into the pypso directory and leave the "pypso."-parts away in the 
 #  python-session) 
@@ -40,4 +41,4 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA'
-# ******************************************************************************
+################################################################################
