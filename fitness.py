@@ -1,7 +1,6 @@
-import conf
 import math
 
-def fitness(particle):
+def fitness(particle,conf):
   '''
     When given a particle, fitness() applies its coordinates 
     to the problem and returns a fitness value.
@@ -41,4 +40,4 @@ def fitness(particle):
       nextdim = getnextdim(particle,d)   
       res += ( 100 * (pow(nextdim - pow(dim,2),2)) + pow(dim - 1,2)  )
   else: raise Exception('I do not know the function "' + conf.function + '"!')
-  return  abs(0 - res) 
+  return res 
