@@ -3,7 +3,7 @@
 #  
 #  This script is an implementation of the Particle Swarm Optimization
 #  algorithm in Python.
-#  It can be used to perform basic experiments.
+#  It can be used to perform basic experiments with PSO.
 #  It was written by Nicolas Hoening (http://www.nicolashoening.de)
 #  with some inspiration by pseudocode of adaptiveview.com:
 #  http://www.adaptiveview.com/articles/ipsop1.html 

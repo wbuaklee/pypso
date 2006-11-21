@@ -32,9 +32,11 @@ logGeoRank = True
 logCloseness = True
  
 logSuffix = '_cg_sphere' 
+logDir = 'logs/'
 logRFile = True   
 logConsole = True
 logFrequency = 1
+logPopulationAt = []
 
 averageOver = 30  
 def trialgen():

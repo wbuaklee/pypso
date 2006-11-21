@@ -5,7 +5,7 @@
 # changing on the way. 
 #
 # However, you can also specify your own file that specifies all this and let pypso read the values
-# from there (they'll overwrite the values that originate from here). 
+# from there (it will overwrite the values here). 
 # This might be a good solution to save the configurations for several experiments to
 # be able to repeat them.
 # For that, you should use a copy of conf_template.py.
@@ -13,7 +13,7 @@
 # run(conf_file='my_experiment.py')
 #
 # You might even write a little python script that conducts serveral 
-# experiments while you are home, sleeping:
+# experiments, each based on a configuration file like this, while you are home, sleeping:
 # import pypso.base
 # base.run(conf_file='exp1.py')
 # base.run(conf_file='exp2.py')
@@ -72,15 +72,16 @@ logMeanFitness = False # log the mean fitness
 logGeoRank = False      # log the average rank of neighbors of particles in terms of geographical distance
 logCloseness = False    # log the average of the distances particles have to their neighbors
  
-# Logging style: "csv"-files, meaning comma separated value files 
+# Logging style is "csv"-files (meaning comma separated value files) 
 # (usable in MS Excel, Open Office or the like - see below for GNU R!)
-logSuffix = '_cg_sphere' # suffix for the logfile name("log{logSuffix}.[csv|html]")
+logSuffix = '_cg_sphere' # suffix for the logfile name("log{logSuffix}.csv") - good place to name the experiment
+logDir = 'logs/'   # a directory where generated logfiles go (end with "/"!)
 logRFile = True   # for the.csv - data, you can generate a GNU R - File. It will plot your CSV data immediately
                   # (just type "R --no-save < log{logSuffix}.r" when GNU R is installed) 
                   # You don't even need to know GNU R! (though it is a nice, highly customable tool)
 logConsole = True # any activity output on console?
 logFrequency = 10 # log point every n iterations (should be a divisor of maxIterations!)
-
+logPopulationAt = [50,100,150,200,250,300] # a list of iterations at which you want a backup of the generation's positions
 # ******************************************
 # These variables control experiment setup
 # ******************************************
