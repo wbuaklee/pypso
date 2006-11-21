@@ -17,6 +17,11 @@ class Particle:
       self.current.append(randMM(conf.initMin,conf.initMax))
       self.best.append(randMM(conf.initMin,conf.initMax))
 
+  def __str__(self):
+    ''' print the current position '''
+    s = ''
+    for d in self.current: s += str(d) + ', '
+    return s
 
 particles = None
 pDelta = None
@@ -24,8 +29,6 @@ nDelta = None
 gbest = None # may not be used, but it is needed in "star" topology and maybe logging
 bestParticle = None    # same here
 actRun = 1
-#iterations = None
-
 
 def setup(conf,logging):
   ''' make a fresh start with a new population '''
@@ -316,7 +319,9 @@ def run(conf_file=''):
         # log (if wanted) 
         if iterations in logging.iterLog:
           logging.logPoint(iterations, sumPBests / conf.numberOfParticles, gbest, sumFitness / conf.numberOfParticles,conf)
-
+        
+        if iterations in conf.logPopulationAt: logging.logPopulation(particles,iterations,actRun,conf)
+        
         iterations += 1
       # end of: while iterations <= maxIterations 
       actRun += 1

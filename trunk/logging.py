@@ -38,6 +38,15 @@ def logPoint(when,pBestAvg,gBest,meanFitness,conf):
   if conf.logGBest: log[conf.actTrialName]['gBestLog'][str(when)] += gBest
   if conf.logGeoRank: log[conf.actTrialName]['georankLog'][str(when)] += avg_geo_index
   if conf.logCloseness: log[conf.actTrialName]['closenessLog'][str(when)] += avg_closeness
+
+def logPopulation(particles, iteration, run, conf):
+  ''' write a csv file with the populations positions'''
+  # make sure logDir exists
+  import os
+  if not os.path.exists(conf.logDir): os.mkdir(conf.logDir) 
+  file = open(str(conf.logDir)+str(conf.actTrialName)+'_run'+str(run)+'_populationAt'+str(iteration)+conf.logSuffix+'.csv','w')
+  for p in particles: file.write(str(p) + '\n')
+  file.close()
   
 def resetLogs(conf):
   global iterLog
@@ -92,7 +101,7 @@ def writeGNURFile(data_type,conf):
       would fit well on the same scale, per topic and per scale) 
   '''
   headers = writeHeaders(data_type,conf)
-  rFile = open('log'+conf.logSuffix+'_'+data_type+'.r','w')
+  rFile = open(conf.logDir+'log'+conf.logSuffix+'_'+data_type+'.r','w')
   import datetime
   rFile.write('# ---------------------------------------------------------------------------\n')
   rFile.write('# This file was automagically outputted by the PyPSO script on ' + datetime.date.today().strftime("%m-%d-%y" + '\n'))
@@ -178,7 +187,7 @@ def writeGNURFile(data_type,conf):
 def writeLog(conf):
   # filetype
   suffix = '.csv'
-  logFile = open('log'+conf.logSuffix+suffix,'w')
+  logFile = open(conf.logDir+'log'+conf.logSuffix+suffix,'w')
   if not(logFile==None):
     # average out
     for trial in log.keys():
