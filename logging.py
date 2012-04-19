@@ -137,13 +137,15 @@ def writeGNURFile(data_type,conf):
   if bestCol[1]=='meanFitnessLog' or (bestCol[1]=='pBestLog' and not conf.logMeanFitness) or (bestCol[1]=='gBestLog' and not conf.logMeanFitness and not conf.logPBest) : index = 1 
   elif bestCol[1]=='gBestLog' and conf.logGBest and conf.logMeanFitness and conf.logPBest: index = 3
   elif (bestCol[1]=='pBestLog' and conf.logMeanFitness) or (bestCol[1]=='gBestLog' and (not conf.logMeanFitness or not conf.logPBest)): index = 2
-  
+
   # for geodata, it's simpler:
   nfl = getNumberOfLogs('fitness',conf)
   if bestCol[1]=='georankLog': index = nfl + 1
   elif bestCol[1]=='closenessLog': index = nfl + 2
-  
-  #index *= bestCol[0] # shift it to the trial with the best value
+
+  start = 2 # the data in R starts indexing by 1 since we have the Iteration column, which is the index, not data
+  if data_type == 'geo': start += nfl
+
   for i in range(bestCol[0]): index += getNumberOfLogs('all',conf)
   index += 1 # the first column are the iterations, so add one
   # Here I assume that it's cool to show the y-column for fitness data logarythmic! You might want to change that!
@@ -154,7 +156,14 @@ def writeGNURFile(data_type,conf):
     ylab = 'georank / closeness'
     logarithmic = ""
 
-  rFile.write('plot(d$Iteration,d[,'+str(index)+'],type="n",log="'+logarithmic+'", xlab="Iteration", ylab="'+ylab+'")\n')
+  rFile.write('xrange <- range(d$Iteration)\n')
+  rFile.write('cols <- c(')
+  arrIndices = []
+  for col in getColumnSequence(start,data_type,conf):
+      arrIndices.append('d[,%i]' % col)
+  rFile.write(','.join(arrIndices) + ')\n')
+  rFile.write('yrange <- range(cols)\n')
+  rFile.write('plot(xrange, yrange,type="n",log="'+logarithmic+'", xlab="Iteration", ylab="'+ylab+'")\n')
 
   # generate colors
   colors = ['black','green','yellow','red','blue','pink','orange','grey']
@@ -166,8 +175,6 @@ def writeGNURFile(data_type,conf):
   # write the lines ...
   def plotLine(column,nmb,color): rFile.write('lines(d$Iteration,d[,'+str(column)+'], lty='+str(nmb)+', col="'+ color +'")\n')
 
-  start = 2 # the data in R starts indexing by 1 since we have the Iteration column, which is the index, not data
-  if data_type == 'geo': start += nfl
   used_colors = []
   columns = getColumnSequence(start,data_type,conf)
   nmb = start
@@ -178,7 +185,7 @@ def writeGNURFile(data_type,conf):
     nmb += 1
 
   # ... and the legend (its horizontal position is just an estimate)
-  rFile.write('legend('+str(conf.maxIterations/3)+',max(d[,'+str(index)+'])-max(d[,'+str(index)+'])/10,lty=c'+str(tuple(range(1,nmb-start+1))).replace(",)",")")+',legend=c'+str(tuple(headers)).replace(",)",")")+', col=c'+str(tuple(used_colors)).replace(",)",")")+')\n')
+  rFile.write('legend('+str(conf.maxIterations/3)+',max(cols)-max(cols)/10,lty=c'+str(tuple(range(1,nmb-start+1))).replace(",)",")")+',legend=c'+str(tuple(headers)).replace(",)",")")+', col=c'+str(tuple(used_colors)).replace(",)",")")+')\n')
 
   rFile.write('dev.off()\n')
   rFile.write('q()\n')
